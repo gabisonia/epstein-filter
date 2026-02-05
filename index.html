@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Epstein Filter</title>
+    <meta
+      name="description"
+      content="Epstein Filter is a free, frontend-only tool to hide faces in photos with movable black boxes and download the edited image instantly."
+    />
+    <meta
+      name="keywords"
+      content="face blur, hide face, censor image, privacy tool, black box editor, photo redaction, epstein filter"
+    />
+    <meta name="author" content="gabisoniairakli" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#1c4ed8" />
+    <link rel="canonical" href="https://epstein-filter.com/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Epstein Filter" />
+    <meta property="og:title" content="Epstein Filter" />
+    <meta
+      property="og:description"
+      content="Hide faces in photos fast with a local, browser-only editor. Add, move, and resize black boxes, then download."
+    />
+    <meta property="og:url" content="https://epstein-filter.com/" />
+    <meta property="og:image" content="https://epstein-filter.com/og.jpeg" />
+    <meta property="og:image:secure_url" content="https://epstein-filter.com/og.jpeg" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Epstein Filter face hiding tool preview" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Epstein Filter" />
+    <meta
+      name="twitter:description"
+      content="Frontend-only face hiding tool. Upload, place black boxes, and download your edited image."
+    />
+    <meta name="twitter:image" content="https://epstein-filter.com/og.jpeg" />
+    <meta name="twitter:image:alt" content="Epstein Filter face hiding tool preview" />
+    <meta name="twitter:creator" content="@gabisoniairakli" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Epstein Filter",
+        "url": "https://epstein-filter.com/",
+        "applicationCategory": "PhotoApplication",
+        "operatingSystem": "Any",
+        "description": "Frontend-only image privacy editor for hiding faces using movable and resizable black boxes.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "author": {
+          "@type": "Person",
+          "name": "gabisoniairakli",
+          "url": "https://x.com/gabisoniairakli"
+        }
+      }
+    </script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Sora:wght@600;700&display=swap");
+
+      :root {
+        --bg: #eef3ff;
+        --panel: #ffffff;
+        --text: #172033;
+        --muted: #5e6a80;
+        --line: #d9e1f2;
+        --primary: #1c4ed8;
+        --primary-deep: #1236a1;
+        --primary-soft: #edf3ff;
+        --danger-soft: #fff1ec;
+        --danger: #c95d3d;
+        --success: #138a4b;
+        --shadow: 0 24px 56px rgba(15, 40, 100, 0.14);
+        --shadow-soft: 0 12px 30px rgba(22, 44, 98, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        color-scheme: light;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Manrope", "Avenir Next", "Trebuchet MS", sans-serif;
+        background:
+          radial-gradient(circle at 90% 8%, #d7e5ff 0%, transparent 38%),
+          radial-gradient(circle at 8% 88%, #ffe3d8 0%, transparent 36%),
+          linear-gradient(180deg, #f6f9ff 0%, #ecf3ff 100%),
+          var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      .app {
+        max-width: 1260px;
+        margin: 0 auto;
+        padding: 20px 12px 42px;
+      }
+
+      .hero {
+        margin-bottom: 16px;
+        animation: fadeIn 0.4s ease-out;
+      }
+
+      .hero-top {
+        display: block;
+      }
+
+      .hero h1 {
+        margin: 0;
+        font-family: "Sora", "Manrope", sans-serif;
+        font-size: clamp(1.65rem, 8vw, 2rem);
+        letter-spacing: -0.03em;
+        color: #0f1d3c;
+      }
+
+      .hero p {
+        margin: 8px 0 0;
+        max-width: 100%;
+        color: var(--muted);
+        font-size: 0.95rem;
+        line-height: 1.5;
+      }
+
+      .workspace {
+        display: grid;
+        gap: 14px;
+        grid-template-columns: 1fr;
+        align-items: start;
+      }
+
+      .editor-card {
+        position: relative;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+        border: 1px solid #cfdaee;
+        border-radius: 18px;
+        box-shadow: var(--shadow);
+        padding: 12px;
+        overflow: hidden;
+        animation: fadeInUp 0.45s ease-out;
+      }
+
+      .editor-card::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 4px;
+        background: linear-gradient(90deg, #2a63e6 0%, #5a89f5 52%, #ef7f5d 100%);
+        opacity: 0.95;
+      }
+
+      .toolbar {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        align-items: stretch;
+        margin-bottom: 12px;
+        border: 1px solid #dce6f5;
+        border-radius: 14px;
+        background: #f8fbff;
+        padding: 11px;
+      }
+
+      .toolbar button,
+      .toolbar .file-label {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        border: 1px solid #c6d5ed;
+        border-radius: 12px;
+        background: var(--panel);
+        color: var(--text);
+        padding: 11px 15px;
+        min-height: 46px;
+        font-size: 0.9rem;
+        font-family: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+        box-shadow: 0 4px 12px rgba(23, 56, 120, 0.08);
+      }
+
+      .toolbar button:hover,
+      .toolbar .file-label:hover {
+        transform: translateY(-2px);
+        border-color: #aac1eb;
+        background: #ffffff;
+        box-shadow: 0 8px 18px rgba(23, 56, 120, 0.14);
+      }
+
+      .toolbar button:active,
+      .toolbar .file-label:active {
+        transform: translateY(0);
+      }
+
+      .toolbar .file-label {
+        background: linear-gradient(180deg, #2a63e6 0%, #1c4ed8 100%);
+        border-color: #1c4ed8;
+        color: #ffffff;
+      }
+
+      .toolbar .file-label:hover,
+      .toolbar .file-label:active,
+      .toolbar .file-label:focus,
+      .toolbar .file-label:focus-within {
+        background: linear-gradient(180deg, #2a63e6 0%, #1c4ed8 100%);
+        border-color: #1c4ed8;
+        color: #ffffff;
+      }
+
+      .toolbar #addBoxBtn {
+        background: var(--primary-soft);
+        border-color: #b7cdf8;
+        color: var(--primary-deep);
+      }
+
+      .toolbar #removeBoxBtn {
+        background: #ffffff;
+        border-color: #efc6bc;
+        color: #8d3e2d;
+      }
+
+      .toolbar #downloadBtn {
+        background: linear-gradient(180deg, #1d2432 0%, #111827 100%);
+        border-color: #111827;
+        color: #ffffff;
+      }
+
+      .toolbar button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .toolbar button:focus-visible,
+      .toolbar .file-label:focus-visible,
+      .toolbar .file-label:focus-within {
+        outline: 2px solid #4a84ea;
+        outline-offset: 1px;
+      }
+
+      .toolbar .file-label input {
+        display: none;
+      }
+
+      .status {
+        margin-left: 0;
+        width: 100%;
+        text-align: center;
+        font-size: 0.82rem;
+        font-weight: 700;
+        padding: 7px 11px;
+        border-radius: 999px;
+        border: 1px solid #d5deeb;
+        background: #f4f7fc;
+        color: var(--muted);
+      }
+
+      .status::before {
+        content: "";
+        display: inline-block;
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: var(--success);
+        margin-right: 6px;
+        vertical-align: middle;
+      }
+
+      .hint {
+        margin: 0 0 12px;
+        font-size: 0.85rem;
+        color: #4e5d78;
+        background: linear-gradient(180deg, #fff7f4 0%, #fff3ef 100%);
+        border: 1px solid #f1d4ca;
+        border-radius: 11px;
+        padding: 9px 11px;
+      }
+
+      .editor-shell {
+        border: 1px solid #d8e3f4;
+        border-radius: 16px;
+        background: linear-gradient(180deg, #ffffff 0%, #f6f9ff 100%);
+        min-height: 320px;
+        display: grid;
+        place-items: center;
+        padding: 14px;
+        touch-action: none;
+      }
+
+      .empty-text {
+        color: var(--muted);
+        text-align: center;
+        font-size: 0.96rem;
+        max-width: 360px;
+        line-height: 1.5;
+      }
+
+      .canvas-wrap {
+        position: relative;
+        user-select: none;
+        line-height: 0;
+        max-width: 100%;
+        max-height: 62vh;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 10px 24px rgba(19, 33, 66, 0.17);
+        touch-action: none;
+      }
+
+      .canvas-wrap img {
+        max-width: 100%;
+        max-height: 62vh;
+        height: auto;
+        width: auto;
+        display: block;
+        touch-action: none;
+      }
+
+      .box {
+        position: absolute;
+        background: #000;
+        border: 2px solid transparent;
+        cursor: move;
+        touch-action: none;
+      }
+
+      .box.selected {
+        border-color: #ffffff;
+        box-shadow: 0 0 0 1px #111827, 0 0 0 3px rgba(255, 255, 255, 0.7);
+      }
+
+      .resize-handle {
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        right: -7px;
+        bottom: -7px;
+        background: #ffffff;
+        border: 1px solid #0f172a;
+        border-radius: 3px;
+        cursor: nwse-resize;
+        touch-action: none;
+      }
+
+      .credit {
+        margin-top: 14px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.86rem;
+      }
+
+      .credit a {
+        color: var(--primary);
+        font-weight: 700;
+        text-decoration: none;
+        border-bottom: 1px solid rgba(28, 78, 216, 0.35);
+      }
+
+      .credit a:hover {
+        border-bottom-color: rgba(28, 78, 216, 0.85);
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (min-width: 700px) {
+        .app {
+          padding: 28px 16px 54px;
+        }
+
+        .hero-top {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 16px;
+        }
+
+        .hero h1 {
+          font-size: clamp(1.9rem, 3.8vw, 2.45rem);
+        }
+
+        .hero p {
+          max-width: 820px;
+          font-size: 1.02rem;
+          line-height: 1.55;
+        }
+
+        .editor-card {
+          border-radius: 22px;
+          padding: 18px;
+        }
+
+        .toolbar {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+        }
+
+        .toolbar button,
+        .toolbar .file-label {
+          width: auto;
+          min-height: 0;
+          padding: 10px 15px;
+        }
+
+        .status {
+          margin-left: auto;
+          width: auto;
+          text-align: left;
+        }
+
+        .editor-shell {
+          min-height: 390px;
+        }
+
+        .canvas-wrap,
+        .canvas-wrap img {
+          max-height: 74vh;
+        }
+      }
+
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <header class="hero">
+        <div class="hero-top">
+          <h1>Didn’t make it into the Epstein files? Here’s your chance.</h1>
+        </div>
+      </header>
+
+      <section class="workspace">
+        <section class="editor-card">
+          <div class="toolbar">
+            <label class="file-label">
+              Upload Image
+              <input id="fileInput" type="file" accept="image/*" />
+            </label>
+            <button id="addBoxBtn" disabled>Add Black Box</button>
+            <button id="removeBoxBtn" disabled>Remove Selected</button>
+            <button id="downloadBtn" disabled>Download Image</button>
+            <span class="status" id="statusText">No image loaded</span>
+          </div>
+          <p class="hint">Tip: select a box first, then press Delete or Backspace to remove it quickly.</p>
+
+          <section class="editor-shell" id="editorShell">
+            <div class="empty-text">
+              Upload a photo, then add, drag, and resize black boxes to hide faces.
+            </div>
+          </section>
+        </section>
+
+      </section>
+      <p class="credit">
+        Created by
+        <a href="https://x.com/gabisoniairakli" target="_blank" rel="noopener noreferrer">https://x.com/gabisoniairakli</a>
+      </p>
+    </main>
+
+    <script>
+      const fileInput = document.getElementById("fileInput");
+      const addBoxBtn = document.getElementById("addBoxBtn");
+      const removeBoxBtn = document.getElementById("removeBoxBtn");
+      const downloadBtn = document.getElementById("downloadBtn");
+      const statusText = document.getElementById("statusText");
+      const editorShell = document.getElementById("editorShell");
+
+      let image = null;
+      let imageDataUrl = "";
+      let boxes = [];
+      let selectedId = null;
+      let boxCounter = 0;
+      let dragState = null;
+
+      const MIN_SIZE = 0.02;
+
+      function clamp(value, min, max) {
+        return Math.min(max, Math.max(min, value));
+      }
+
+      function getWrapper() {
+        return document.getElementById("canvasWrap");
+      }
+
+      function getSelectedBox() {
+        return boxes.find((b) => b.id === selectedId) || null;
+      }
+
+      function refreshButtons() {
+        const hasImage = Boolean(image);
+        addBoxBtn.disabled = !hasImage;
+        downloadBtn.disabled = !hasImage;
+        removeBoxBtn.disabled = !getSelectedBox();
+      }
+
+      function updateStatus() {
+        if (!image) {
+          statusText.textContent = "No image loaded";
+          return;
+        }
+        statusText.textContent = `${boxes.length} box${boxes.length === 1 ? "" : "es"} added`;
+      }
+
+      function ensureLayout() {
+        if (!image) return;
+        const wrap = getWrapper();
+        if (!wrap) return;
+        renderBoxes();
+      }
+
+      function renderBoxes() {
+        const wrap = getWrapper();
+        if (!wrap) return;
+
+        wrap.querySelectorAll(".box").forEach((el) => el.remove());
+
+        const w = wrap.clientWidth;
+        const h = wrap.clientHeight;
+        if (!w || !h) return;
+
+        boxes.forEach((box) => {
+          const el = document.createElement("div");
+          el.className = "box" + (box.id === selectedId ? " selected" : "");
+          el.style.left = `${box.x * w}px`;
+          el.style.top = `${box.y * h}px`;
+          el.style.width = `${box.w * w}px`;
+          el.style.height = `${box.h * h}px`;
+          el.dataset.id = String(box.id);
+
+          const handle = document.createElement("div");
+          handle.className = "resize-handle";
+          handle.dataset.id = String(box.id);
+          el.appendChild(handle);
+
+          el.addEventListener("pointerdown", (e) => {
+            if (e.target.classList.contains("resize-handle")) return;
+            e.preventDefault();
+            const id = Number(el.dataset.id);
+            selectedId = id;
+            startDrag(e, id, "move");
+            renderBoxes();
+            refreshButtons();
+          });
+
+          handle.addEventListener("pointerdown", (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            const id = Number(handle.dataset.id);
+            selectedId = id;
+            startDrag(e, id, "resize");
+            renderBoxes();
+            refreshButtons();
+          });
+
+          wrap.appendChild(el);
+        });
+
+        refreshButtons();
+        updateStatus();
+      }
+
+      function startDrag(event, id, mode) {
+        const wrap = getWrapper();
+        if (!wrap) return;
+        const rect = wrap.getBoundingClientRect();
+        const box = boxes.find((b) => b.id === id);
+        if (!box) return;
+
+        dragState = {
+          id,
+          mode,
+          startX: (event.clientX - rect.left) / rect.width,
+          startY: (event.clientY - rect.top) / rect.height,
+          boxStart: { ...box }
+        };
+
+        window.addEventListener("pointermove", onPointerMove);
+        window.addEventListener("pointerup", stopDrag, { once: true });
+      }
+
+      function onPointerMove(event) {
+        if (!dragState) return;
+        const wrap = getWrapper();
+        if (!wrap) return;
+        const rect = wrap.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+
+        const currentX = (event.clientX - rect.left) / rect.width;
+        const currentY = (event.clientY - rect.top) / rect.height;
+        const dx = currentX - dragState.startX;
+        const dy = currentY - dragState.startY;
+
+        const box = boxes.find((b) => b.id === dragState.id);
+        if (!box) return;
+
+        if (dragState.mode === "move") {
+          box.x = clamp(dragState.boxStart.x + dx, 0, 1 - box.w);
+          box.y = clamp(dragState.boxStart.y + dy, 0, 1 - box.h);
+        } else {
+          const nextW = clamp(dragState.boxStart.w + dx, MIN_SIZE, 1 - dragState.boxStart.x);
+          const nextH = clamp(dragState.boxStart.h + dy, MIN_SIZE, 1 - dragState.boxStart.y);
+          box.w = nextW;
+          box.h = nextH;
+        }
+
+        renderBoxes();
+      }
+
+      function stopDrag() {
+        dragState = null;
+        window.removeEventListener("pointermove", onPointerMove);
+      }
+
+      function mountEditor(src) {
+        editorShell.innerHTML = `
+          <div class="canvas-wrap" id="canvasWrap">
+            <img id="sourceImage" src="${src}" alt="Uploaded image" />
+          </div>
+        `;
+        image = document.getElementById("sourceImage");
+        image.addEventListener("load", () => {
+          ensureLayout();
+          refreshButtons();
+          updateStatus();
+        });
+        if (image.complete) {
+          ensureLayout();
+          refreshButtons();
+          updateStatus();
+        }
+      }
+
+      function addBox() {
+        if (!image) return;
+        const id = ++boxCounter;
+        boxes.push({
+          id,
+          x: 0.4,
+          y: 0.4,
+          w: 0.2,
+          h: 0.2
+        });
+        selectedId = id;
+        renderBoxes();
+      }
+
+      function removeSelected() {
+        const selected = getSelectedBox();
+        if (!selected) return;
+        boxes = boxes.filter((b) => b.id !== selected.id);
+        selectedId = boxes.length ? boxes[boxes.length - 1].id : null;
+        renderBoxes();
+      }
+
+      function onGlobalKeyDown(event) {
+        const isDeleteKey =
+          event.key === "Delete" ||
+          event.key === "Backspace" ||
+          event.code === "Delete" ||
+          event.code === "Backspace";
+        if (!isDeleteKey) return;
+        if (!getSelectedBox()) return;
+        event.preventDefault();
+        removeSelected();
+      }
+
+      function downloadImage() {
+        if (!image || !imageDataUrl) return;
+        const out = document.createElement("canvas");
+        out.width = image.naturalWidth;
+        out.height = image.naturalHeight;
+        const ctx = out.getContext("2d");
+        if (!ctx) return;
+
+        const img = new Image();
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0, out.width, out.height);
+          boxes.forEach((box) => {
+            const x = Math.round(box.x * out.width);
+            const y = Math.round(box.y * out.height);
+            const w = Math.round(box.w * out.width);
+            const h = Math.round(box.h * out.height);
+            ctx.fillStyle = "#000000";
+            ctx.fillRect(x, y, w, h);
+          });
+
+          const link = document.createElement("a");
+          link.download = "epstein-filter.png";
+          link.href = out.toDataURL("image/png");
+          link.click();
+        };
+        img.src = imageDataUrl;
+      }
+
+      fileInput.addEventListener("change", (event) => {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          imageDataUrl = String(reader.result || "");
+          boxes = [];
+          selectedId = null;
+          mountEditor(imageDataUrl);
+          refreshButtons();
+          updateStatus();
+        };
+        reader.readAsDataURL(file);
+      });
+
+      addBoxBtn.addEventListener("click", addBox);
+      removeBoxBtn.addEventListener("click", removeSelected);
+      downloadBtn.addEventListener("click", downloadImage);
+      window.addEventListener("keydown", onGlobalKeyDown, { capture: true });
+
+      window.addEventListener("resize", ensureLayout);
+
+      editorShell.addEventListener("pointerdown", (event) => {
+        if (event.target === editorShell || event.target.id === "canvasWrap" || event.target.id === "sourceImage") {
+          selectedId = null;
+          renderBoxes();
+          refreshButtons();
+        }
+      });
+    </script>
+  </body>
+</html>
